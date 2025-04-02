@@ -97,6 +97,11 @@ class SandboxSettings(BaseModel):
         False, description="Whether network access is allowed"
     )
 
+class ManimSettings(BaseModel):
+
+    executable_path: str = Field(None, description="manim executable path")
+    default_quality: str = Field(None, description="manim video quality")
+
 
 class MCPSettings(BaseModel):
     """Configuration for MCP (Model Context Protocol)"""
@@ -118,6 +123,7 @@ class AppConfig(BaseModel):
         None, description="Search configuration"
     )
     mcp_config: Optional[MCPSettings] = Field(None, description="MCP configuration")
+    manim_config: Optional[ManimSettings] = Field(None, description="Manim configuration")
 
     class Config:
         arbitrary_types_allowed = True
@@ -227,6 +233,13 @@ class Config:
         else:
             mcp_settings = MCPSettings()
 
+        manim_config = raw_config.get("manim", {})
+        manim_settings = None
+        if manim_config:
+            manim_settings = ManimSettings(**manim_config)
+        else:
+            manim_settings = ManimSettings()
+
         config_dict = {
             "llm": {
                 "default": default_settings,
@@ -239,6 +252,7 @@ class Config:
             "browser_config": browser_settings,
             "search_config": search_settings,
             "mcp_config": mcp_settings,
+            "manim_config": manim_settings,
         }
 
         self._config = AppConfig(**config_dict)
@@ -263,6 +277,10 @@ class Config:
     def mcp_config(self) -> MCPSettings:
         """Get the MCP configuration"""
         return self._config.mcp_config
+
+    @property
+    def manim_config(self) -> ManimSettings:
+        return self._config.manim_config
 
     @property
     def workspace_root(self) -> Path:
